@@ -1,39 +1,43 @@
-# TaskIt - Personal Assistant
+# TaskIt — Frontend
+
+React + Vite frontend for the TaskIt personal productivity assistant. Part of the [TaskIt monorepo](../README.md).
 
 ## Overview
-TaskIt is a comprehensive personal assistant application designed to help you manage and track all aspects of your life in one place. Stay organized with task management, habit tracking, appointment scheduling, and progress monitoring.
 
-## Features
-- **Task Management** - Create, organize, and prioritize your daily tasks
-- **Habit Tracking** - Build and maintain positive habits with progress tracking
-- **Appointments** - Schedule and manage your calendar events
-- **Progress Monitoring** - Visualize your achievements and growth over time
-- **Dashboard** - Get a complete overview of your tasks, habits, and upcoming events
+Provides the client-side UI for task management, habit tracking, appointment scheduling, progress monitoring, and a unified dashboard.
 
 ## Tech Stack
+
 - React
-- Spring Boot
-- Postgresql
+- Vite
+- Modern component-based UI
 
-## Getting Started
-### Prerequisites
-- Node.js (v14 or higher)
-- npm or yarn
+## Prerequisites
 
-### Installation
+- Node.js (v14+)
+- npm
+
+## Running
+
+From the monorepo root:
+
 ```bash
-git clone https://github.com/yourusername/taskit-frontend.git
-cd taskit-frontend
+cd frontend
 npm install
-```
-
-### Running the Application
-```bash
 npm run dev
 ```
 
-## Contributing
-Contributions are welcome! Please feel free to submit a Pull Request.
+The development server will start and connect to the backend API.
+
+## Available Scripts
+
+| Script          | Description                        |
+| --------------- | ---------------------------------- |
+| `npm run dev`   | Start development server           |
+| `npm run build` | Build for production               |
+| `npm run preview` | Preview production build locally |
+| `npm run lint`  | Run ESLint                         |
 
 ## License
-This project is licensed under the MIT License - see the LICENSE file for details.
+
+MIT License

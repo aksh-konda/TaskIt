@@ -1,29 +1,27 @@
-# TaskIt - Backend API
+# TaskIt — Backend API
+
+Spring Boot REST API for the TaskIt personal productivity assistant. Part of the [TaskIt monorepo](../README.md).
 
 ## Overview
-TaskIt is a Spring Boot backend that powers the TaskIt personal assistant app. It provides APIs for managing tasks, habits, appointments, and progress data in a PostgreSQL database.
 
-## Features
-- **Task Management** - CRUD APIs for organizing and prioritizing tasks
-- **Habit Tracking** - Track habits and progress over time
-- **Appointments** - Manage calendar events and reminders
-- **Progress Monitoring** - Store and retrieve progress insights
-- **Dashboard Data** - Aggregate data for a unified overview
+Provides CRUD APIs for managing tasks, habits, appointments, and progress data, backed by a PostgreSQL database.
 
 ## Tech Stack
+
 - Java 17
 - Spring Boot
 - Spring Data JPA
 - PostgreSQL
 - Gradle
 
-## Getting Started
-### Prerequisites
+## Prerequisites
+
 - Java 17
 - PostgreSQL
 
-### Database Setup
-Create a database and user that match the default configuration:
+## Database Setup
+
+Create a database and user matching the default configuration:
 
 ```sql
 CREATE DATABASE taskit;
@@ -31,28 +29,25 @@ CREATE USER taskit WITH PASSWORD 'taskit';
 GRANT ALL PRIVILEGES ON DATABASE taskit TO taskit;
 ```
 
-You can change these defaults in `src/main/resources/application.properties`.
+Defaults can be changed in `src/main/resources/application.properties`.
 
-### Installation
-```bash
-git clone https://github.com/yourusername/taskit-backend.git
-cd taskit-backend
-```
+## Running
 
-### Running the Application
+From the monorepo root:
+
 ```bash
+cd backend
 ./gradlew bootRun
 ```
 
-By default, the app runs with the `dev` profile and uses `create-drop` for the schema. Update the active profile or JPA settings in `src/main/resources/application.properties` if needed.
+By default the app runs with the `dev` profile using `create-drop` for the schema.
 
-### Running Tests
+## Testing
+
 ```bash
 ./gradlew test
 ```
 
-## Contributing
-Contributions are welcome! Please feel free to submit a Pull Request.
-
 ## License
-This project is licensed under the MIT License - see the LICENSE file for details.
+
+MIT License
