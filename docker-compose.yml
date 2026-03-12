@@ -1,40 +1,75 @@
 services:
 
+  # ---------------------------------------------------------------------------
+  # PostgreSQL database
+  # Uses the official lightweight Alpine-based image.
+  # Data is persisted in a named volume so it survives container restarts.
+  # A healthcheck polls pg_isready so dependent services only start once the
+  # database is actually accepting connections, not just running.
+  # ---------------------------------------------------------------------------
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: taskit
-      POSTGRES_USER: taskit
-      POSTGRES_PASSWORD: taskit
+      POSTGRES_DB: taskit       # Database name to create on first start
+      POSTGRES_USER: taskit     # Superuser for that database
+      POSTGRES_PASSWORD: taskit # Password for the above user
     volumes:
+      # Mount a named volume so data persists across 'docker compose down' restarts.
+      # Use 'docker compose down -v' to also wipe the database.
       - postgres_data:/var/lib/postgresql/data
     ports:
+      # Expose to host so you can connect with a local DB client (e.g. DBeaver).
       - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U taskit"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      interval: 10s  # Check every 10 seconds
+      timeout: 5s    # Fail the check if no response within 5 seconds
+      retries: 5     # Mark unhealthy after 5 consecutive failures
 
+  # ---------------------------------------------------------------------------
+  # Spring Boot backend API
+  # Built from ./backend/Dockerfile using a multi-stage build.
+  # Environment variables override application.properties values at runtime,
+  # replacing 'localhost' with 'postgres' — Docker's internal service hostname.
+  # SPRING_PROFILES_ACTIVE=docker avoids activating the 'dev' profile which
+  # uses 'create-drop' and would wipe the database on every restart.
+  # Waits for postgres to pass its healthcheck before starting.
+  # ---------------------------------------------------------------------------
   backend:
     build: ./backend
     ports:
+      # Expose to host for direct API testing (e.g. Postman, curl).
       - "8080:8080"
     environment:
+      # Override datasource URL to use the postgres service name as the hostname.
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/taskit
       SPRING_DATASOURCE_USERNAME: taskit
       SPRING_DATASOURCE_PASSWORD: taskit
+      # Use a neutral profile — avoids 'create-drop' from the dev profile.
       SPRING_PROFILES_ACTIVE: docker
     depends_on:
       postgres:
-        condition: service_healthy
+        condition: service_healthy  # Wait until postgres passes its healthcheck
 
+  # ---------------------------------------------------------------------------
+  # React frontend
+  # Built from ./frontend/Dockerfile using a multi-stage build.
+  # nginx serves the compiled React app on port 80 and proxies /tasks requests
+  # to the backend container — keeping everything on the same origin and
+  # avoiding browser CORS restrictions.
+  # ---------------------------------------------------------------------------
   frontend:
     build: ./frontend
     ports:
+      # App is accessible at http://localhost in the browser.
       - "80:80"
     depends_on:
-      - backend
+      - backend  # Ensure backend is started before the frontend container
 
+# ---------------------------------------------------------------------------
+# Named volumes
+# Managed by Docker — data persists across container restarts.
+# Run 'docker compose down -v' to remove volumes and wipe all data.
+# ---------------------------------------------------------------------------
 volumes:
   postgres_data:
