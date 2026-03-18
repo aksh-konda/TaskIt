@@ -141,6 +141,49 @@ docker compose up --build backend   # backend + postgres only
 docker compose up --build frontend  # frontend only
 ```
 
+## Development Mode with Hot Reload
+
+Use the dev compose file when you want code changes to reflect quickly while developing.
+
+```bash
+docker compose -f docker-compose.dev.yml up
+```
+
+This mode runs:
+
+| Service  | URL                   | Dev behavior |
+| -------- | --------------------- | ------------ |
+| Frontend | http://localhost:5173 | Vite dev server with HMR |
+| Backend  | http://localhost:8080 | `bootRun --continuous` with source mounted |
+| Postgres | localhost:5432        | Same database container as standard compose |
+
+Stop dev mode:
+
+```bash
+docker compose -f docker-compose.dev.yml down
+```
+
+Stop dev mode and remove database volume:
+
+```bash
+docker compose -f docker-compose.dev.yml down -v
+```
+
+### Makefile shortcuts
+
+You can use root-level Make targets instead of typing full Docker Compose commands:
+
+```bash
+make dev
+make dev-front
+make dev-back
+make dev-down
+make dev-reset
+make dev-logs
+make prod
+make prod-down
+```
+
 ---
 
 # Running the Backend
