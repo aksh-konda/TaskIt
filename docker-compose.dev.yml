@@ -1,0 +1,53 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: taskit
+      POSTGRES_USER: taskit
+      POSTGRES_PASSWORD: taskit
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U taskit"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    image: gradle:8.14.3-jdk17
+    working_dir: /workspace/backend
+    command: sh -c "chmod +x ./gradlew && ./gradlew bootRun --continuous --no-daemon"
+    volumes:
+      - ./backend:/workspace/backend
+      - gradle_cache:/home/gradle/.gradle
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/taskit
+      SPRING_DATASOURCE_USERNAME: taskit
+      SPRING_DATASOURCE_PASSWORD: taskit
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    image: node:20-alpine
+    working_dir: /workspace/frontend
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
+    volumes:
+      - ./frontend:/workspace/frontend
+      - frontend_node_modules:/workspace/frontend/node_modules
+    environment:
+      VITE_API_PROXY_TARGET: http://backend:8080
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  gradle_cache:
+  frontend_node_modules:
