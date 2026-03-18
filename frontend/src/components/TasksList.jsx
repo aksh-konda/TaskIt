@@ -8,6 +8,8 @@ export default function TasksList() {
   const [error, setError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(null)
+  const [deletingTaskId, setDeletingTaskId] = useState(null)
+  const [deleteError, setDeleteError] = useState(null)
 
   const fetchTasks = async () => {
     setLoading(true)
@@ -43,6 +45,20 @@ export default function TasksList() {
     }
   }
 
+  const handleDeleteTask = async (taskId) => {
+    setDeleteError(null)
+    setDeletingTaskId(taskId)
+
+    try {
+      await axios.delete(`/tasks/${taskId}`)
+      setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId))
+    } catch (err) {
+      setDeleteError(err.message || 'Failed to delete task')
+    } finally {
+      setDeletingTaskId(null)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <TaskForm
@@ -53,6 +69,7 @@ export default function TasksList() {
 
       {loading && <div className="text-gray-600">Loading tasks…</div>}
       {error && <div className="text-red-600">Error: {error}</div>}
+      {deleteError && <div className="text-red-600">Error: {deleteError}</div>}
 
       {!loading && !error && (!tasks || tasks.length === 0) && (
         <div className="text-gray-600">No tasks yet.</div>
@@ -68,6 +85,7 @@ export default function TasksList() {
                 <th className="px-4 py-2 text-sm font-medium">Description</th>
                 <th className="px-4 py-2 text-sm font-medium">Status</th>
                 <th className="px-4 py-2 text-sm font-medium">Progress</th>
+                <th className="px-4 py-2 text-sm font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -89,6 +107,16 @@ export default function TasksList() {
                     </span>
                   </td>
                   <td className="px-4 py-2 text-sm text-gray-700">{t.progress ?? 0}%</td>
+                  <td className="px-4 py-2 text-sm text-gray-700">
+                    <button
+                      type="button"
+                      className="px-3 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                      onClick={() => handleDeleteTask(t.id)}
+                      disabled={deletingTaskId === t.id}
+                    >
+                      {deletingTaskId === t.id ? 'Deleting…' : 'Delete'}
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
