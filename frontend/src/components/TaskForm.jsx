@@ -1,10 +1,18 @@
 import React, { useState } from 'react'
 
+const toSeconds = (hours, minutes, seconds) =>
+  Number(hours || 0) * 3600 + Number(minutes || 0) * 60 + Number(seconds || 0)
+
 export default function TaskForm({ onSubmit, submitting, submitError }) {
   const [form, setForm] = useState({
     title: '',
     description: '',
     status: 'TODO',
+    priority: 'MEDIUM',
+    dueDate: '',
+    estHours: 0,
+    estMinutes: 0,
+    estSeconds: 0,
     progress: 0,
   })
 
@@ -12,7 +20,10 @@ export default function TaskForm({ onSubmit, submitting, submitError }) {
     const { name, value } = e.target
     setForm((prev) => ({
       ...prev,
-      [name]: name === 'progress' ? Number(value) : value,
+      [name]:
+        name === 'progress' || name === 'estHours' || name === 'estMinutes' || name === 'estSeconds'
+          ? Number(value)
+          : value,
     }))
   }
 
@@ -23,6 +34,9 @@ export default function TaskForm({ onSubmit, submitting, submitError }) {
       title: form.title.trim(),
       description: form.description.trim(),
       status: form.status,
+      priority: form.priority,
+      dueDate: form.dueDate ? `${form.dueDate}T00:00:00Z` : null,
+      estTime: toSeconds(form.estHours, form.estMinutes, form.estSeconds),
       progress: form.progress,
     })
 
@@ -31,6 +45,11 @@ export default function TaskForm({ onSubmit, submitting, submitError }) {
         title: '',
         description: '',
         status: 'TODO',
+        priority: 'MEDIUM',
+        dueDate: '',
+        estHours: 0,
+        estMinutes: 0,
+        estSeconds: 0,
         progress: 0,
       })
     }
@@ -61,6 +80,25 @@ export default function TaskForm({ onSubmit, submitting, submitError }) {
           <option value="IN_PROGRESS">IN_PROGRESS</option>
           <option value="COMPLETED">COMPLETED</option>
         </select>
+
+        <select
+          name="priority"
+          value={form.priority}
+          onChange={handleChange}
+          className="border rounded px-3 py-2"
+        >
+          <option value="LOW">LOW</option>
+          <option value="MEDIUM">MEDIUM</option>
+          <option value="HIGH">HIGH</option>
+        </select>
+
+        <input
+          type="date"
+          name="dueDate"
+          value={form.dueDate}
+          onChange={handleChange}
+          className="border rounded px-3 py-2"
+        />
       </div>
 
       <textarea
@@ -72,17 +110,66 @@ export default function TaskForm({ onSubmit, submitting, submitError }) {
         rows={3}
       />
 
-      <div className="max-w-xs">
-        <label className="block text-sm text-gray-700 mb-1">Progress (%)</label>
-        <input
-          type="number"
-          name="progress"
-          value={form.progress}
-          onChange={handleChange}
-          min={0}
-          max={100}
-          className="w-full border rounded px-3 py-2"
-        />
+      <div className="grid gap-4 md:grid-cols-2 lg:items-end">
+        <div>
+          <label className="block text-sm text-gray-700 mb-1">Progress (%)</label>
+          <div className="flex flex-col">
+            <span className="text-[10px] text-transparent uppercase tracking-wide mb-1 opacity-0">&nbsp;</span>
+            <input
+              type="number"
+              name="progress"
+              value={form.progress}
+              onChange={handleChange}
+              min={0}
+              max={100}
+              className="w-full border rounded px-3 py-2"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm text-gray-700 mb-1">Estimated time</label>
+          <div className="grid gap-2 grid-cols-3">
+            <div className="flex flex-col">
+              <span className="text-[10px] text-gray-500 uppercase tracking-wide mb-1">Hours</span>
+              <input
+                type="number"
+                name="estHours"
+                value={form.estHours}
+                onChange={handleChange}
+                min={0}
+                placeholder="Hours"
+                className="w-full border rounded px-3 py-2"
+              />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] text-gray-500 uppercase tracking-wide mb-1">Minutes</span>
+              <input
+                type="number"
+                name="estMinutes"
+                value={form.estMinutes}
+                onChange={handleChange}
+                min={0}
+                max={59}
+                placeholder="Minutes"
+                className="w-full border rounded px-3 py-2"
+              />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] text-gray-500 uppercase tracking-wide mb-1">Seconds</span>
+              <input
+                type="number"
+                name="estSeconds"
+                value={form.estSeconds}
+                onChange={handleChange}
+                min={0}
+                max={59}
+                placeholder="Seconds"
+                className="w-full border rounded px-3 py-2"
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
       {submitError && <div className="text-red-600 text-sm">Error: {submitError}</div>}
