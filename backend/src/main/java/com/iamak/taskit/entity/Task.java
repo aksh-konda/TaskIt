@@ -1,6 +1,7 @@
 package com.iamak.taskit.entity;
 
 import com.iamak.taskit.dto.Status;
+import com.iamak.taskit.dto.Priority;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -23,7 +24,12 @@ public class Task {
     @Enumerated(EnumType.STRING)
     private Status status;
 
+    @Enumerated(EnumType.STRING)
+    private Priority priority;
+
     private Instant dueDate;
+
+    private Integer estTime;
 
     private int progress;
 }
