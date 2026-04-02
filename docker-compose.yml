@@ -47,6 +47,11 @@ services:
       SPRING_DATASOURCE_PASSWORD: taskit
       # Use a neutral profile — avoids 'create-drop' from the dev profile.
       SPRING_PROFILES_ACTIVE: docker
+      SPRING_AI_OPENAI_API_KEY: ${SPRING_AI_OPENAI_API_KEY}
+      SPRING_AI_OPENAI_CHAT_ENABLED: ${SPRING_AI_OPENAI_CHAT_ENABLED:-false}
+      SPRING_AI_OPENAI_CHAT_MODEL: ${SPRING_AI_OPENAI_CHAT_MODEL:-gpt-4o-mini}
+      SPRING_AI_OPENAI_CHAT_TEMPERATURE: ${SPRING_AI_OPENAI_CHAT_TEMPERATURE:-0.2}
+      SPRING_AI_OPENAI_BASE_URL: ${SPRING_AI_OPENAI_BASE_URL:-https://api.openai.com}
     depends_on:
       postgres:
         condition: service_healthy  # Wait until postgres passes its healthcheck

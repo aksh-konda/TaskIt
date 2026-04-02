@@ -197,7 +197,9 @@ cd backend
 
 TaskIt backend uses Spring AI with an OpenAI-compatible chat model for task planning.
 
-Set these environment variables before running the backend:
+For Docker Compose, copy [.env.example](.env.example) to `.env` in the repository root and fill in your API key. Docker Compose will automatically read that file.
+
+Set these environment variables before running the backend locally:
 
 ```bash
 export SPRING_AI_OPENAI_API_KEY=your_api_key
@@ -219,6 +221,8 @@ curl -X POST http://localhost:8080/ai/plan \
   -H "Content-Type: application/json" \
   -d '{"dateTime":"2026-04-02T09:00:00"}'
 ```
+
+When running with `make dev` or `make dev-back`, set the same variables in your shell or `.env` file so the backend container receives them.
 
 ### Database Setup
 
