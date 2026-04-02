@@ -157,6 +157,8 @@ This mode runs:
 | Backend  | http://localhost:8080 | `bootRun --continuous` with source mounted |
 | Postgres | localhost:5432        | Same database container as standard compose |
 
+The backend loads a small set of dummy tasks automatically in this docker dev mode so the UI has sample content on first start.
+
 Stop dev mode:
 
 ```bash
