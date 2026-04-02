@@ -1,4 +1,4 @@
-package com.iamak.taskit.dto;
+package com.iamak.taskit.model;
 
 public enum Priority {
     LOW,

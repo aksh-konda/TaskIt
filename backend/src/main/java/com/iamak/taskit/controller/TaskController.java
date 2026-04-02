@@ -1,6 +1,6 @@
 package com.iamak.taskit.controller;
 
-import com.iamak.taskit.entity.Task;
+import com.iamak.taskit.dto.DomainDtos;
 import com.iamak.taskit.service.TaskService;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,29 +10,44 @@ import java.util.List;
 @RequestMapping("/tasks")
 public class TaskController {
 
-    private final TaskService service;
+    private final TaskService taskService;
 
-    public TaskController(TaskService service) {
-        this.service = service;
-    }
-
-    @PostMapping
-    public Task create(@RequestBody Task task) {
-        return service.create(task);
-    }
-
-    @PutMapping("/{id}")
-    public Task update(@PathVariable Long id, @RequestBody Task task) {
-        return service.update(id, task);
+    public TaskController(TaskService taskService) {
+        this.taskService = taskService;
     }
 
     @GetMapping
-    public List<Task> getAll() {
-        return service.getAll();
+    public List<DomainDtos.TaskResponse> list() {
+        return taskService.list();
+    }
+
+    @GetMapping("/{id}")
+    public DomainDtos.TaskResponse get(@PathVariable Long id) {
+        return taskService.get(id);
+    }
+
+    @PostMapping
+    public DomainDtos.TaskResponse create(@RequestBody DomainDtos.TaskRequest request) {
+        return taskService.create(request);
+    }
+
+    @PutMapping("/{id}")
+    public DomainDtos.TaskResponse update(@PathVariable Long id, @RequestBody DomainDtos.TaskRequest request) {
+        return taskService.update(id, request);
+    }
+
+    @PostMapping("/{id}/complete")
+    public DomainDtos.TaskResponse complete(@PathVariable Long id) {
+        return taskService.complete(id);
+    }
+
+    @PostMapping("/{id}/reopen")
+    public DomainDtos.TaskResponse reopen(@PathVariable Long id) {
+        return taskService.reopen(id);
     }
 
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
-        service.delete(id);
+        taskService.delete(id);
     }
 }

@@ -12,3 +12,6 @@
 .env
 .env.local
 .env.*.local
+
+# Local temp artifacts (build logs, debug outputs)
+.tmp/

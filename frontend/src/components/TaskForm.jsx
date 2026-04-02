@@ -115,15 +115,18 @@ export default function TaskForm({ onSubmit, submitting, submitError }) {
           <label className="block text-sm text-gray-700 mb-1">Progress (%)</label>
           <div className="flex flex-col">
             <span className="text-[10px] text-transparent uppercase tracking-wide mb-1 opacity-0">&nbsp;</span>
-            <input
-              type="number"
-              name="progress"
-              value={form.progress}
-              onChange={handleChange}
-              min={0}
-              max={100}
-              className="w-full border rounded px-3 py-2"
-            />
+            <div className="flex items-center gap-3 w-full h-[42px] px-1">
+              <input
+                type="range"
+                name="progress"
+                value={form.progress}
+                onChange={handleChange}
+                min={0}
+                max={100}
+                className="flex-grow h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+              />
+              <span className="text-sm font-medium text-gray-700 w-8">{form.progress}%</span>
+            </div>
           </div>
         </div>
 
