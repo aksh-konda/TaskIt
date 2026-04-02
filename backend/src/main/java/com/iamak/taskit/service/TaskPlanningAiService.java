@@ -2,6 +2,8 @@ package com.iamak.taskit.service;
 
 import com.iamak.taskit.entity.Task;
 import org.springframework.ai.chat.client.ChatClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -13,6 +15,8 @@ import java.util.Objects;
 
 @Service
 public class TaskPlanningAiService {
+
+    private static final Logger logger = LoggerFactory.getLogger(TaskPlanningAiService.class);
 
     private static final String SYSTEM_INSTRUCTIONS = """
             You are a focused productivity assistant.
@@ -31,6 +35,8 @@ public class TaskPlanningAiService {
         LocalDateTime effectiveDateTime = dateTime != null ? dateTime : LocalDateTime.now();
         List<Task> safeTasks = tasks != null ? tasks : List.of();
 
+        logger.info("Generating AI plan for {} tasks", safeTasks.size());
+
         try {
             String content = this.chatClient.prompt()
                     .system(SYSTEM_INSTRUCTIONS)
@@ -41,6 +47,7 @@ public class TaskPlanningAiService {
             return parsePlanLines(content, effectiveDateTime, safeTasks);
         }
         catch (Exception ex) {
+            logger.error("AI planning failed; falling back to deterministic plan", ex);
             return fallbackPlan(effectiveDateTime, safeTasks);
         }
     }
@@ -73,6 +80,7 @@ public class TaskPlanningAiService {
 
     private List<String> parsePlanLines(String content, LocalDateTime dateTime, List<Task> tasks) {
         if (content == null || content.isBlank()) {
+            logger.warn("AI returned empty plan content; using fallback plan");
             return fallbackPlan(dateTime, tasks);
         }
 
@@ -84,12 +92,16 @@ public class TaskPlanningAiService {
                 .limit(8)
                 .toList();
 
+            logger.debug("Parsed {} AI plan steps", parsed.size());
+
         return parsed.isEmpty() ? fallbackPlan(dateTime, tasks) : parsed;
     }
 
     private List<String> fallbackPlan(LocalDateTime dateTime, List<Task> tasks) {
         List<String> plan = new ArrayList<>();
         plan.add("Review priorities and due dates at " + dateTime + ".");
+
+            logger.info("Building fallback plan for {} tasks", tasks.size());
 
         tasks.stream()
                 .filter(Objects::nonNull)
@@ -103,6 +115,8 @@ public class TaskPlanningAiService {
             plan.add("Capture your top 3 priorities for today.");
             plan.add("Time-block one focused session for each priority.");
         }
+
+        logger.debug("Fallback plan contains {} steps", plan.size());
 
         return plan;
     }

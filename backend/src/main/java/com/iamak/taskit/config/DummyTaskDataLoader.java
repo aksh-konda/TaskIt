@@ -4,6 +4,8 @@ import com.iamak.taskit.dto.Priority;
 import com.iamak.taskit.dto.Status;
 import com.iamak.taskit.entity.Task;
 import com.iamak.taskit.repository.TaskRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -13,8 +15,10 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Component
-@Profile("docker")
+@Profile("dev")
 public class DummyTaskDataLoader implements CommandLineRunner {
+
+    private static final Logger logger = LoggerFactory.getLogger(DummyTaskDataLoader.class);
 
     private final TaskRepository taskRepository;
 
@@ -25,6 +29,7 @@ public class DummyTaskDataLoader implements CommandLineRunner {
     @Override
     public void run(String... args) {
         if (taskRepository.count() > 0) {
+            logger.info("Skipping dummy task seed because tasks already exist");
             return;
         }
 
@@ -38,7 +43,7 @@ public class DummyTaskDataLoader implements CommandLineRunner {
                         Status.IN_PROGRESS,
                         Priority.HIGH,
                         now.plus(2, ChronoUnit.DAYS),
-                        4,
+                        1800,
                         60
                 ),
                 new Task(
@@ -48,7 +53,7 @@ public class DummyTaskDataLoader implements CommandLineRunner {
                         Status.TODO,
                         Priority.MEDIUM,
                         now.plus(5, ChronoUnit.DAYS),
-                        3,
+                        1800,
                         0
                 ),
                 new Task(
@@ -58,11 +63,12 @@ public class DummyTaskDataLoader implements CommandLineRunner {
                         Status.COMPLETED,
                         Priority.LOW,
                         now.minus(1, ChronoUnit.DAYS),
-                        2,
+                        3600,
                         100
                 )
         );
 
         taskRepository.saveAll(tasks);
+        logger.info("Seeded {} dummy tasks for the dev profile", tasks.size());
     }
 }
