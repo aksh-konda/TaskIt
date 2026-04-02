@@ -193,6 +193,33 @@ cd backend
 ./gradlew bootRun
 ```
 
+### Spring AI Configuration (OpenAI)
+
+TaskIt backend uses Spring AI with an OpenAI-compatible chat model for task planning.
+
+Set these environment variables before running the backend:
+
+```bash
+export SPRING_AI_OPENAI_API_KEY=your_api_key
+export SPRING_AI_OPENAI_CHAT_ENABLED=true
+```
+
+Optional overrides:
+
+```bash
+export SPRING_AI_OPENAI_CHAT_MODEL=gpt-4o-mini
+export SPRING_AI_OPENAI_CHAT_TEMPERATURE=0.2
+export SPRING_AI_OPENAI_BASE_URL=https://api.openai.com
+```
+
+Generate an AI plan:
+
+```bash
+curl -X POST http://localhost:8080/ai/plan \
+  -H "Content-Type: application/json" \
+  -d '{"dateTime":"2026-04-02T09:00:00"}'
+```
+
 ### Database Setup
 
 Create a PostgreSQL database and user:
