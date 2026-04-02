@@ -2,10 +2,12 @@ package com.iamak.taskit.controller;
 
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
+import com.iamak.taskit.dto.PlanRequest;
+import com.iamak.taskit.dto.PlanResponse;
 import com.iamak.taskit.entity.Task;
+import com.iamak.taskit.service.TaskPlanningAiService;
 import com.iamak.taskit.service.TaskService;
 
 
@@ -13,56 +15,19 @@ import com.iamak.taskit.service.TaskService;
 @RequestMapping("/ai")
 public class TaskAgentController {
 
-    private TaskService taskService;
+    private final TaskService taskService;
+    private final TaskPlanningAiService taskPlanningAiService;
 
-    public TaskAgentController(TaskService taskService) {
+    public TaskAgentController(TaskService taskService, TaskPlanningAiService taskPlanningAiService) {
         this.taskService = taskService;
+        this.taskPlanningAiService = taskPlanningAiService;
     }
 
     @PostMapping("/plan")
     public PlanResponse generatePlan(@RequestBody PlanRequest request) {
+        LocalDateTime requestedDateTime = request != null ? request.getDateTime() : null;
         List<Task> tasks = this.taskService.getAll();
-        List<String> plan = createAIPlan(request.getDateTime(), tasks);
+        List<String> plan = this.taskPlanningAiService.generatePlan(requestedDateTime, tasks);
         return new PlanResponse(plan);
-    }
-
-    private List<String> createAIPlan(LocalDateTime dateTime, List<Task> tasks) {
-        List<String> plan = new ArrayList<>();
-        // Add your AI planning logic here
-        plan.add("Review tasks for " + dateTime);
-        plan.add("Prioritize by deadline");
-        plan.add("Set time blocks");
-        for (Task task : tasks) {
-            plan.add("Include task: " + task.getTitle());
-        }
-        return plan;
-    }
-
-    static class PlanRequest {
-        private LocalDateTime dateTime;
-
-        public LocalDateTime getDateTime() {
-            return dateTime;
-        }
-
-        public void setDateTime(LocalDateTime dateTime) {
-            this.dateTime = dateTime;
-        }
-    }
-
-    static class PlanResponse {
-        private List<String> plan;
-
-        public PlanResponse(List<String> plan) {
-            this.plan = plan;
-        }
-
-        public List<String> getPlan() {
-            return plan;
-        }
-
-        public void setPlan(List<String> plan) {
-            this.plan = plan;
-        }
     }
 }
