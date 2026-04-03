@@ -195,25 +195,24 @@ cd backend
 ./gradlew bootRun
 ```
 
-### Spring AI Configuration (OpenAI)
+### Spring AI Configuration (Gemini)
 
-TaskIt backend uses Spring AI with an OpenAI-compatible chat model for task planning.
+TaskIt backend uses Spring AI with Google Gemini for task planning.
 
 For Docker Compose, copy [.env.example](.env.example) to `.env` in the repository root and fill in your API key. Docker Compose will automatically read that file.
 
 Set these environment variables before running the backend locally:
 
 ```bash
-export SPRING_AI_OPENAI_API_KEY=your_api_key
-export SPRING_AI_OPENAI_CHAT_ENABLED=true
+export SPRING_AI_MODEL_CHAT=google-genai
+export SPRING_AI_GOOGLE_GENAI_API_KEY=your_api_key
 ```
 
 Optional overrides:
 
 ```bash
-export SPRING_AI_OPENAI_CHAT_MODEL=gpt-4o-mini
-export SPRING_AI_OPENAI_CHAT_TEMPERATURE=0.2
-export SPRING_AI_OPENAI_BASE_URL=https://api.openai.com
+export SPRING_AI_GOOGLE_GENAI_CHAT_MODEL=gemini-3-flash-preview
+export SPRING_AI_GOOGLE_GENAI_CHAT_TEMPERATURE=0.2
 ```
 
 Generate an AI plan:
@@ -225,6 +224,12 @@ curl -X POST http://localhost:8080/ai/plan \
 ```
 
 When running with `make dev` or `make dev-back`, set the same variables in your shell or `.env` file so the backend container receives them.
+
+Required env changes:
+
+* Remove the OpenAI variables: `SPRING_AI_OPENAI_API_KEY`, `SPRING_AI_OPENAI_CHAT_ENABLED`, `SPRING_AI_OPENAI_CHAT_MODEL`, `SPRING_AI_OPENAI_CHAT_TEMPERATURE`, `SPRING_AI_OPENAI_BASE_URL`
+* Add Gemini variables: `SPRING_AI_MODEL_CHAT`, `SPRING_AI_GOOGLE_GENAI_API_KEY`, `SPRING_AI_GOOGLE_GENAI_CHAT_MODEL`, `SPRING_AI_GOOGLE_GENAI_CHAT_TEMPERATURE`
+* If you are using Google AI Studio, `SPRING_AI_GOOGLE_GENAI_API_KEY` is the key you need; no base URL is required
 
 ### Database Setup
 
