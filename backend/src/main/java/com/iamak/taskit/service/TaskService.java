@@ -1,12 +1,13 @@
 package com.iamak.taskit.service;
 
-import com.iamak.taskit.entity.Task;
-import com.iamak.taskit.repository.TaskRepository;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import com.iamak.taskit.entity.Task;
+import com.iamak.taskit.repository.TaskRepository;
 
 @Service
 public class TaskService {
