@@ -22,25 +22,25 @@ public class TaskController {
 
     @PostMapping
     public Task create(@RequestBody Task task) {
-        logger.info("Received request to create task");
+        logger.info("task.create.request");
         return service.create(task);
     }
 
     @PutMapping("/{id}")
     public Task update(@PathVariable Long id, @RequestBody Task task) {
-        logger.info("Received request to update task {}", id);
+        logger.info("task.update.request id={}", id);
         return service.update(id, task);
     }
 
     @GetMapping
     public List<Task> getAll() {
-        logger.debug("Received request to list tasks");
+        logger.debug("task.list.request");
         return service.getAll();
     }
 
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
-        logger.info("Received request to delete task {}", id);
+        logger.info("task.delete.request id={}", id);
         service.delete(id);
     }
 }

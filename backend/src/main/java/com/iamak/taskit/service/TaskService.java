@@ -21,7 +21,7 @@ public class TaskService {
 
     public Task create(Task task) {
         Task savedTask = repo.save(task);
-        logger.info("Created task {}", savedTask.getId());
+        logger.info("task.create.success id={}", savedTask.getId());
         return savedTask;
     }
 
@@ -29,7 +29,7 @@ public class TaskService {
 
         Task existingTask = repo.findById(id)
                 .orElseThrow(() -> {
-                    logger.warn("Task {} not found for update", id);
+                    logger.warn("task.update.not-found id={}", id);
                     return new RuntimeException("Task not found");
                 });
 
@@ -42,19 +42,19 @@ public class TaskService {
         existingTask.setProgress(updatedTask.getProgress());
 
         Task savedTask = repo.save(existingTask);
-        logger.info("Updated task {}", id);
+        logger.info("task.update.success id={}", id);
         return savedTask;
     }
 
 
     public List<Task> getAll() {
         List<Task> tasks = repo.findAll();
-        logger.debug("Loaded {} tasks", tasks.size());
+        logger.debug("task.list.success count={}", tasks.size());
         return tasks;
     }
 
     public void delete(Long id) {
-        logger.info("Deleting task {}", id);
+        logger.info("task.delete.request id={}", id);
         repo.deleteById(id);
     }
 }

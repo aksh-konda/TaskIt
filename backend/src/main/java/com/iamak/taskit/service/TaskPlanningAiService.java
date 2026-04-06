@@ -1,28 +1,38 @@
 package com.iamak.taskit.service;
 
-import com.iamak.taskit.entity.Task;
-import org.springframework.ai.chat.client.ChatClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.stereotype.Service;
+
+import com.iamak.taskit.dto.Status;
+import com.iamak.taskit.entity.Task;
+
 @Service
 public class TaskPlanningAiService {
 
     private static final Logger logger = LoggerFactory.getLogger(TaskPlanningAiService.class);
+    private static final String BLOCK_SEPARATOR = "----------------------------------------------------------------";
 
     private static final String SYSTEM_INSTRUCTIONS = """
-            You are a focused productivity assistant.
-            Build a realistic execution plan for the user's tasks.
-            Return only a plain text numbered list with short, actionable steps.
-            Keep the plan concise and ordered by urgency and impact.
+            You are a strict task execution planner.
+
+            Your job is to decide the ORDER of tasks.
+
+            RULES:
+            - Return ONLY a numbered list
+            - Each step = task title + short reason
+            - Do NOT assign time or dates
+            - Do NOT split tasks
+            - Keep output short and clear
+            - Prioritize tasks already in progress
+            - Group similar tasks together
             """;
 
     private final ChatClient chatClient;
@@ -31,57 +41,93 @@ public class TaskPlanningAiService {
         this.chatClient = chatClientBuilder.build();
     }
 
-    public List<String> generatePlan(LocalDateTime dateTime, List<Task> tasks) {
+    public List<String> generatePlan(String callId, LocalDateTime dateTime, List<Task> tasks) {
+        long startNanos = System.nanoTime();
         LocalDateTime effectiveDateTime = dateTime != null ? dateTime : LocalDateTime.now();
-        List<Task> safeTasks = tasks != null ? tasks : List.of();
+        List<Task> safeTasks = tasks == null ? List.of()
+                : tasks.stream()
+                        .filter(Objects::nonNull)
+                        .filter(task -> task.getStatus() != Status.COMPLETED)
+                        .toList();
+        String safeCallId = callId != null && !callId.isBlank() ? callId : "unknown-call-id";
 
-        logger.info("Generating AI plan for {} tasks", safeTasks.size());
+        logger.info("[AI_PLAN][{}] ai.generate.start totalTasks={} activeTasks={} planAt={}",
+                safeCallId,
+                tasks == null ? 0 : tasks.size(),
+                safeTasks.size(),
+                effectiveDateTime);
 
         try {
+            String prompt = buildPrompt(effectiveDateTime, safeTasks);
+            if (logger.isDebugEnabled()) {
+                logger.debug(BLOCK_SEPARATOR);
+                logger.debug("[AI_PLAN][{}][PROMPT_BEGIN]", safeCallId);
+                logger.debug("{}", prompt);
+                logger.debug("[AI_PLAN][{}][PROMPT_END]", safeCallId);
+            }
+
+            long aiStartNanos = System.nanoTime();
             String content = this.chatClient.prompt()
                     .system(SYSTEM_INSTRUCTIONS)
-                    .user(buildPrompt(effectiveDateTime, safeTasks))
+                    .user(prompt)
                     .call()
                     .content();
+            long aiDurationMs = (System.nanoTime() - aiStartNanos) / 1_000_000;
 
-            return parsePlanLines(content, effectiveDateTime, safeTasks);
-        }
-        catch (Exception ex) {
-            logger.error("AI planning failed; falling back to deterministic plan", ex);
-            return fallbackPlan(effectiveDateTime, safeTasks);
+            if (logger.isDebugEnabled()) {
+                logger.debug("[AI_PLAN][{}][RESPONSE_BEGIN]", safeCallId);
+                logger.debug("{}", content == null ? "null" : content);
+                logger.debug("[AI_PLAN][{}][RESPONSE_END]", safeCallId);
+                logger.debug(BLOCK_SEPARATOR);
+            }
+
+            List<String> parsedPlan = parsePlanLines(safeCallId, content, effectiveDateTime, safeTasks);
+            long totalDurationMs = (System.nanoTime() - startNanos) / 1_000_000;
+
+            logger.info("[AI_PLAN][{}] ai.generate.success aiDurationMs={} totalDurationMs={} responseChars={} planSteps={}",
+                    safeCallId,
+                    aiDurationMs,
+                    totalDurationMs,
+                    content == null ? 0 : content.length(),
+                    parsedPlan.size());
+
+            return parsedPlan;
+        } catch (Exception ex) {
+            logger.error("[AI_PLAN][{}] ai.generate.error fallback=deterministic", safeCallId, ex);
+            return fallbackPlan(safeCallId, effectiveDateTime, safeTasks);
         }
     }
 
     private String buildPrompt(LocalDateTime dateTime, List<Task> tasks) {
         StringBuilder builder = new StringBuilder();
-        builder.append("Current planning time: ")
+        builder.append("Planning context time: ")
                 .append(dateTime)
                 .append("\n")
                 .append("Tasks:\n");
 
-        if (tasks.isEmpty()) {
-            builder.append("- No tasks currently available.\n");
-        }
-        else {
-            for (Task task : tasks) {
-                builder.append("- title: ").append(defaultText(task.getTitle()))
-                        .append(", status: ").append(task.getStatus())
-                        .append(", priority: ").append(task.getPriority())
-                        .append(", dueDate(UTC): ").append(task.getDueDate() == null ? "none" : task.getDueDate().atOffset(ZoneOffset.UTC))
-                        .append(", estTime(min): ").append(task.getEstTime() == null ? "unknown" : task.getEstTime())
-                        .append(", progress(%): ").append(task.getProgress())
-                        .append("\n");
-            }
+        for (Task task : tasks) {
+            builder.append("- ")
+                    .append(defaultText(task.getTitle()))
+                    .append(" | priority: ")
+                    .append(task.getPriority())
+                    .append(" | status: ")
+                    .append(task.getStatus())
+                    .append("\n");
         }
 
-        builder.append("Generate 5 to 8 actionable plan steps.");
+        builder.append("""
+
+                Decide the best execution order.
+                Return only a numbered list.
+                """);
+
         return builder.toString();
     }
 
-    private List<String> parsePlanLines(String content, LocalDateTime dateTime, List<Task> tasks) {
+    private List<String> parsePlanLines(String callId, String content, LocalDateTime dateTime, List<Task> tasks) {
         if (content == null || content.isBlank()) {
-            logger.warn("AI returned empty plan content; using fallback plan");
-            return fallbackPlan(dateTime, tasks);
+            logger.warn("[AI_PLAN][{}] AI returned empty plan content; using fallback plan", callId);
+            return fallbackPlan(callId, dateTime, tasks);
         }
 
         List<String> parsed = content.lines()
@@ -92,16 +138,16 @@ public class TaskPlanningAiService {
                 .limit(8)
                 .toList();
 
-            logger.debug("Parsed {} AI plan steps", parsed.size());
+        logger.debug("[AI_PLAN][{}] ai.parse steps={}", callId, parsed.size());
 
-        return parsed.isEmpty() ? fallbackPlan(dateTime, tasks) : parsed;
+        return parsed.isEmpty() ? fallbackPlan(callId, dateTime, tasks) : parsed;
     }
 
-    private List<String> fallbackPlan(LocalDateTime dateTime, List<Task> tasks) {
+    private List<String> fallbackPlan(String callId, LocalDateTime dateTime, List<Task> tasks) {
         List<String> plan = new ArrayList<>();
         plan.add("Review priorities and due dates at " + dateTime + ".");
 
-            logger.info("Building fallback plan for {} tasks", tasks.size());
+        logger.warn("[AI_PLAN][{}] ai.fallback.start tasks={}", callId, tasks.size());
 
         tasks.stream()
                 .filter(Objects::nonNull)
@@ -116,7 +162,7 @@ public class TaskPlanningAiService {
             plan.add("Time-block one focused session for each priority.");
         }
 
-        logger.debug("Fallback plan contains {} steps", plan.size());
+        logger.info("[AI_PLAN][{}] ai.fallback.success planSteps={}", callId, plan.size());
 
         return plan;
     }
