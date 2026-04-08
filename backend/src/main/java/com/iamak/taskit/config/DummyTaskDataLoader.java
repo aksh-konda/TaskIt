@@ -8,11 +8,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import com.iamak.taskit.dto.Priority;
 import com.iamak.taskit.dto.Status;
+import com.iamak.taskit.entity.AppUser;
 import com.iamak.taskit.entity.Task;
+import com.iamak.taskit.repository.AppUserRepository;
 import com.iamak.taskit.repository.TaskRepository;
 
 @Component
@@ -22,9 +25,13 @@ public class DummyTaskDataLoader implements CommandLineRunner {
     private static final Logger logger = LoggerFactory.getLogger(DummyTaskDataLoader.class);
 
     private final TaskRepository taskRepository;
+        private final AppUserRepository appUserRepository;
+        private final PasswordEncoder passwordEncoder;
 
-    public DummyTaskDataLoader(TaskRepository taskRepository) {
+        public DummyTaskDataLoader(TaskRepository taskRepository, AppUserRepository appUserRepository, PasswordEncoder passwordEncoder) {
         this.taskRepository = taskRepository;
+                this.appUserRepository = appUserRepository;
+                this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -36,6 +43,15 @@ public class DummyTaskDataLoader implements CommandLineRunner {
 
         Instant now = Instant.now().truncatedTo(ChronoUnit.DAYS);
 
+        AppUser user = appUserRepository.findByEmail("dev@taskit.local")
+                .orElseGet(() -> {
+                    AppUser created = new AppUser();
+                    created.setEmail("dev@taskit.local");
+                    created.setDisplayName("TaskIt Dev");
+                    created.setPasswordHash(passwordEncoder.encode("devpass123"));
+                    return appUserRepository.save(created);
+                });
+
         List<Task> tasks = List.of(
                 new Task(
                         null,
@@ -45,7 +61,8 @@ public class DummyTaskDataLoader implements CommandLineRunner {
                         Priority.HIGH,
                         now.plus(1, ChronoUnit.DAYS),
                         1800,
-                        40
+                        40,
+                        user
                 ),
                 new Task(
                         null,
@@ -55,7 +72,8 @@ public class DummyTaskDataLoader implements CommandLineRunner {
                         Priority.HIGH,
                         now.plus(1, ChronoUnit.DAYS),
                         1800,
-                        0
+                        0,
+                        user
                 ),
                 new Task(
                         null,
@@ -65,7 +83,8 @@ public class DummyTaskDataLoader implements CommandLineRunner {
                         Priority.MEDIUM,
                         now.plus(0, ChronoUnit.DAYS),
                         3600,
-                        0
+                        0,
+                        user
                 ),
                 new Task(
                         null,
@@ -75,7 +94,8 @@ public class DummyTaskDataLoader implements CommandLineRunner {
                         Priority.HIGH,
                         now.plus(2, ChronoUnit.DAYS),
                         2400,
-                        0
+                        0,
+                        user
                 ),
                 new Task(
                         null,
@@ -85,7 +105,8 @@ public class DummyTaskDataLoader implements CommandLineRunner {
                         Priority.MEDIUM,
                         now.plus(0, ChronoUnit.DAYS),
                         900,
-                        0
+                        0,
+                        user
                 )
         );
 

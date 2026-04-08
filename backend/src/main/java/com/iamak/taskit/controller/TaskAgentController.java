@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.iamak.taskit.dto.PlanRequest;
 import com.iamak.taskit.dto.PlanResponse;
 import com.iamak.taskit.entity.Task;
+import com.iamak.taskit.security.UserPrincipal;
 import com.iamak.taskit.service.TaskPlanningAiService;
 import com.iamak.taskit.service.TaskService;
 
@@ -34,7 +36,7 @@ public class TaskAgentController {
     }
 
     @PostMapping("/plan")
-    public PlanResponse generatePlan(@RequestBody PlanRequest request) {
+    public PlanResponse generatePlan(@AuthenticationPrincipal UserPrincipal principal, @RequestBody PlanRequest request) {
         String callId = UUID.randomUUID().toString();
         long startNanos = System.nanoTime();
         LocalDateTime requestedDateTime = request != null ? request.getDateTime() : null;
@@ -44,7 +46,7 @@ public class TaskAgentController {
                 requestedDateTime != null ? requestedDateTime : "null");
 
         try {
-            List<Task> tasks = this.taskService.getAll();
+            List<Task> tasks = this.taskService.getAll(principal.getId());
             int taskCount = tasks != null ? tasks.size() : 0;
             logger.debug("[AI_PLAN][{}] tasks.loaded count={}", callId, taskCount);
 
