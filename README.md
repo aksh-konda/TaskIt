@@ -195,6 +195,38 @@ cd backend
 ./gradlew bootRun
 ```
 
+### Authentication (JWT)
+
+TaskIt backend now uses stateless JWT auth with refresh tokens.
+
+Auth endpoints:
+
+```bash
+curl -X POST http://localhost:8080/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"you@example.com","password":"changeme123","displayName":"You"}'
+
+curl -X POST http://localhost:8080/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"you@example.com","password":"changeme123"}'
+```
+
+Use the access token for API requests:
+
+```bash
+curl -X GET http://localhost:8080/tasks \
+  -H "Authorization: Bearer <access_token>"
+```
+
+JWT configuration (override via env vars):
+
+```bash
+export APP_JWT_ISSUER=taskit
+export APP_JWT_SECRET="replace-with-long-random-secret"
+export APP_JWT_ACCESS_TTL_SECONDS=900
+export APP_JWT_REFRESH_TTL_SECONDS=1209600
+```
+
 ### Spring AI Configuration (Gemini)
 
 TaskIt backend uses Spring AI with Google Gemini for task planning.
@@ -220,6 +252,7 @@ Generate an AI plan:
 ```bash
 curl -X POST http://localhost:8080/ai/plan \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <access_token>" \
   -d '{"dateTime":"2026-04-02T09:00:00"}'
 ```
 
