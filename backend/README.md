@@ -35,6 +35,28 @@ curl -X POST http://localhost:8080/auth/login \
 	-d '{"email":"you@example.com","password":"changeme123"}'
 ```
 
+Quick start (register -> login -> tasks -> AI plan):
+
+```bash
+ACCESS_TOKEN=$(curl -s http://localhost:8080/auth/register \
+	-H "Content-Type: application/json" \
+	-d '{"email":"you@example.com","password":"changeme123","displayName":"You"}' \
+	| jq -r '.accessToken')
+
+curl -X POST http://localhost:8080/tasks \
+	-H "Authorization: Bearer '$ACCESS_TOKEN'" \
+	-H "Content-Type: application/json" \
+	-d '{"title":"First task","description":"Hello","status":"TODO","priority":"MEDIUM","progress":0}'
+
+curl -X GET http://localhost:8080/tasks \
+	-H "Authorization: Bearer '$ACCESS_TOKEN'"
+
+curl -X POST http://localhost:8080/ai/plan \
+	-H "Authorization: Bearer '$ACCESS_TOKEN'" \
+	-H "Content-Type: application/json" \
+	-d '{"dateTime":"2026-04-02T09:00:00"}'
+```
+
 ## Tech Stack
 
 - Java 17
