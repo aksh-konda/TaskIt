@@ -190,9 +190,9 @@ make prod-down
 
 # Running the Backend
 
-```
+```bash
 cd backend
-./gradlew bootRun
+SPRING_PROFILES_ACTIVE=dev ./gradlew bootRun
 ```
 
 Required env changes:
@@ -200,6 +200,7 @@ Required env changes:
 * Remove the OpenAI variables: `SPRING_AI_OPENAI_API_KEY`, `SPRING_AI_OPENAI_CHAT_ENABLED`, `SPRING_AI_OPENAI_CHAT_MODEL`, `SPRING_AI_OPENAI_CHAT_TEMPERATURE`, `SPRING_AI_OPENAI_BASE_URL`
 * Add Gemini variables: `SPRING_AI_MODEL_CHAT`, `SPRING_AI_GOOGLE_GENAI_API_KEY`, `SPRING_AI_GOOGLE_GENAI_CHAT_MODEL`, `SPRING_AI_GOOGLE_GENAI_CHAT_TEMPERATURE`
 * If you are using Google AI Studio, `SPRING_AI_GOOGLE_GENAI_API_KEY` is the key you need; no base URL is required
+* Set `APP_JWT_SECRET` for non-`dev` profiles. The app now fails fast if the JWT secret is missing or too short.
 
 ### Database Setup
 

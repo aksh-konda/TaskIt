@@ -47,6 +47,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: taskit
       # Use a neutral profile — avoids 'create-drop' from the dev profile.
       SPRING_PROFILES_ACTIVE: docker
+      APP_JWT_SECRET: ${APP_JWT_SECRET}
       SPRING_AI_MODEL_CHAT: ${SPRING_AI_MODEL_CHAT:-google-genai}
       SPRING_AI_GOOGLE_GENAI_API_KEY: ${SPRING_AI_GOOGLE_GENAI_API_KEY}
       SPRING_AI_GOOGLE_GENAI_CHAT_MODEL: ${SPRING_AI_GOOGLE_GENAI_CHAT_MODEL:-gemini-3-flash-preview}

@@ -35,12 +35,12 @@ class TaskAgentControllerTest {
         request.setDateTime(requestedDateTime);
 
         when(taskService.getAll(42L)).thenReturn(tasks);
-        when(taskPlanningAiService.generatePlan(anyString(), any(), any())).thenReturn(expectedPlan);
+        when(taskPlanningAiService.generatePlan(anyString(), any(), any(), any())).thenReturn(expectedPlan);
 
         PlanResponse response = controller.generatePlan(principal, request);
 
         assertEquals(expectedPlan, response.getPlan());
         verify(taskService).getAll(42L);
-        verify(taskPlanningAiService).generatePlan(anyString(), any(), any());
+        verify(taskPlanningAiService).generatePlan(anyString(), any(), any(), any());
     }
 }

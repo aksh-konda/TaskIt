@@ -1,12 +1,31 @@
+import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import './App.css'
-import TasksList from './components/TasksList'
+import { useAuth } from './context/useAuth'
+import DashboardPage from './pages/DashboardPage'
+import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
+
+function ProtectedApp() {
+  const { isAuthenticated } = useAuth()
+  const location = useLocation()
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace state={{ from: location }} />
+  }
+
+  return <Outlet />
+}
 
 function App() {
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-3xl font-semibold mb-4">TaskIt</h1>
-      <TasksList />
-    </div>
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route element={<ProtectedApp />}>
+        <Route path="/" element={<DashboardPage />} />
+      </Route>
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   )
 }
 

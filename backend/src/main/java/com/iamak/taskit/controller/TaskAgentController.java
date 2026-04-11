@@ -50,7 +50,7 @@ public class TaskAgentController {
             int taskCount = tasks != null ? tasks.size() : 0;
             logger.debug("[AI_PLAN][{}] tasks.loaded count={}", callId, taskCount);
 
-            List<String> plan = this.taskPlanningAiService.generatePlan(callId, requestedDateTime, tasks);
+            List<String> plan = this.taskPlanningAiService.generatePlan(callId, principal.getId(), requestedDateTime, tasks);
             int planSteps = plan != null ? plan.size() : 0;
 
             long elapsedMs = (System.nanoTime() - startNanos) / 1_000_000;

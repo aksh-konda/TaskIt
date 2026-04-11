@@ -1,7 +1,10 @@
 import React, { useState } from 'react'
 
-const toSeconds = (hours, minutes, seconds) =>
-  Number(hours || 0) * 3600 + Number(minutes || 0) * 60 + Number(seconds || 0)
+const toMinutes = (hours, minutes) =>
+  Number(hours || 0) * 60 + Number(minutes || 0)
+
+const inputClass =
+  'w-full rounded-lg border border-black/10 bg-[#fafafa] px-3 py-2 text-sm text-black outline-none transition placeholder:text-black/35 focus:border-black focus:bg-white'
 
 export default function TaskForm({ onSubmit, submitting, submitError }) {
   const [form, setForm] = useState({
@@ -12,7 +15,6 @@ export default function TaskForm({ onSubmit, submitting, submitError }) {
     dueDate: '',
     estHours: 0,
     estMinutes: 0,
-    estSeconds: 0,
     progress: 0,
   })
 
@@ -21,7 +23,7 @@ export default function TaskForm({ onSubmit, submitting, submitError }) {
     setForm((prev) => ({
       ...prev,
       [name]:
-        name === 'progress' || name === 'estHours' || name === 'estMinutes' || name === 'estSeconds'
+        name === 'progress' || name === 'estHours' || name === 'estMinutes'
           ? Number(value)
           : value,
     }))
@@ -36,7 +38,7 @@ export default function TaskForm({ onSubmit, submitting, submitError }) {
       status: form.status,
       priority: form.priority,
       dueDate: form.dueDate ? `${form.dueDate}T00:00:00Z` : null,
-      estTime: toSeconds(form.estHours, form.estMinutes, form.estSeconds),
+      estTime: toMinutes(form.estHours, form.estMinutes),
       progress: form.progress,
     })
 
@@ -49,24 +51,33 @@ export default function TaskForm({ onSubmit, submitting, submitError }) {
         dueDate: '',
         estHours: 0,
         estMinutes: 0,
-        estSeconds: 0,
         progress: 0,
       })
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="p-4 border rounded bg-white space-y-4">
-      <h2 className="text-lg font-semibold">Add Task</h2>
+    <form
+      onSubmit={handleSubmit}
+      className="rounded-xl border border-black/10 bg-white p-4 shadow-[0_10px_24px_rgba(0,0,0,0.06)]"
+    >
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-medium text-black">
+          New task
+          </h2>
+          <p className="mt-0.5 text-xs text-black/45">Compact and quick.</p>
+        </div>
+      </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-[minmax(0,2fr)_repeat(5,minmax(0,1fr))]">
         <input
           type="text"
           name="title"
           value={form.title}
           onChange={handleChange}
           placeholder="Title"
-          className="border rounded px-3 py-2"
+          className={`xl:col-span-2 ${inputClass}`}
           required
         />
 
@@ -74,22 +85,22 @@ export default function TaskForm({ onSubmit, submitting, submitError }) {
           name="status"
           value={form.status}
           onChange={handleChange}
-          className="border rounded px-3 py-2"
+          className={inputClass}
         >
-          <option value="TODO">TODO</option>
-          <option value="IN_PROGRESS">IN_PROGRESS</option>
-          <option value="COMPLETED">COMPLETED</option>
+          <option value="TODO">To do</option>
+          <option value="IN_PROGRESS">In progress</option>
+          <option value="COMPLETED">Completed</option>
         </select>
 
         <select
           name="priority"
           value={form.priority}
           onChange={handleChange}
-          className="border rounded px-3 py-2"
+          className={inputClass}
         >
-          <option value="LOW">LOW</option>
-          <option value="MEDIUM">MEDIUM</option>
-          <option value="HIGH">HIGH</option>
+          <option value="LOW">Low</option>
+          <option value="MEDIUM">Medium</option>
+          <option value="HIGH">High</option>
         </select>
 
         <input
@@ -97,8 +108,40 @@ export default function TaskForm({ onSubmit, submitting, submitError }) {
           name="dueDate"
           value={form.dueDate}
           onChange={handleChange}
-          className="border rounded px-3 py-2"
+          className={inputClass}
         />
+
+        <div className="grid grid-cols-3 gap-3 xl:col-span-2">
+          <input
+            type="number"
+            name="estHours"
+            value={form.estHours}
+            onChange={handleChange}
+            min={0}
+            placeholder="Hours"
+            className={inputClass}
+          />
+          <input
+            type="number"
+            name="estMinutes"
+            value={form.estMinutes}
+            onChange={handleChange}
+            min={0}
+            max={59}
+            placeholder="Minutes"
+            className={inputClass}
+          />
+          <input
+            type="number"
+            name="progress"
+            value={form.progress}
+            onChange={handleChange}
+            min={0}
+            max={100}
+            placeholder="Progress %"
+            className={inputClass}
+          />
+        </div>
       </div>
 
       <textarea
@@ -106,80 +149,18 @@ export default function TaskForm({ onSubmit, submitting, submitError }) {
         value={form.description}
         onChange={handleChange}
         placeholder="Description"
-        className="w-full border rounded px-3 py-2"
-        rows={3}
+        className={`mt-2 min-h-20 w-full ${inputClass}`}
+        rows={2}
       />
 
-      <div className="grid gap-4 md:grid-cols-2 lg:items-end">
-        <div>
-          <label className="block text-sm text-gray-700 mb-1">Progress (%)</label>
-          <div className="flex flex-col">
-            <span className="text-[10px] text-transparent uppercase tracking-wide mb-1 opacity-0">&nbsp;</span>
-            <input
-              type="number"
-              name="progress"
-              value={form.progress}
-              onChange={handleChange}
-              min={0}
-              max={100}
-              className="w-full border rounded px-3 py-2"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm text-gray-700 mb-1">Estimated time</label>
-          <div className="grid gap-2 grid-cols-3">
-            <div className="flex flex-col">
-              <span className="text-[10px] text-gray-500 uppercase tracking-wide mb-1">Hours</span>
-              <input
-                type="number"
-                name="estHours"
-                value={form.estHours}
-                onChange={handleChange}
-                min={0}
-                placeholder="Hours"
-                className="w-full border rounded px-3 py-2"
-              />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[10px] text-gray-500 uppercase tracking-wide mb-1">Minutes</span>
-              <input
-                type="number"
-                name="estMinutes"
-                value={form.estMinutes}
-                onChange={handleChange}
-                min={0}
-                max={59}
-                placeholder="Minutes"
-                className="w-full border rounded px-3 py-2"
-              />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[10px] text-gray-500 uppercase tracking-wide mb-1">Seconds</span>
-              <input
-                type="number"
-                name="estSeconds"
-                value={form.estSeconds}
-                onChange={handleChange}
-                min={0}
-                max={59}
-                placeholder="Seconds"
-                className="w-full border rounded px-3 py-2"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {submitError && <div className="text-red-600 text-sm">Error: {submitError}</div>}
+      {submitError && <div className="mt-2 text-sm text-black/65">{submitError}</div>}
 
       <button
         type="submit"
         disabled={submitting}
-        className="px-4 py-2 bg-black text-white rounded disabled:opacity-60"
+        className="mt-3 rounded-lg bg-black px-4 py-2 text-sm text-white disabled:opacity-60"
       >
-        {submitting ? 'Adding…' : 'Add Task'}
+        {submitting ? 'Adding…' : 'Add task'}
       </button>
     </form>
   )

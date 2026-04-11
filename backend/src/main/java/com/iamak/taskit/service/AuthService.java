@@ -5,13 +5,16 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.Instant;
+import java.util.Locale;
 import java.util.Base64;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.iamak.taskit.dto.auth.AuthResponse;
 import com.iamak.taskit.dto.auth.LoginRequest;
@@ -50,26 +53,35 @@ public class AuthService {
         this.refreshTtlSeconds = refreshTtlSeconds;
     }
 
+    @Transactional
     public AuthResponse register(RegisterRequest request) {
-        logger.info("auth.register.request email={}", request.getEmail());
-        if (appUserRepository.existsByEmail(request.getEmail())) {
-            logger.warn("auth.register.duplicate email={}", request.getEmail());
+        String normalizedEmail = normalizeEmail(request.getEmail());
+        logger.info("auth.register.request email={}", normalizedEmail);
+        if (appUserRepository.existsByEmail(normalizedEmail)) {
+            logger.warn("auth.register.duplicate email={}", normalizedEmail);
             throw new BadRequestException("Email already registered");
         }
 
         AppUser user = new AppUser();
-        user.setEmail(request.getEmail().toLowerCase());
-        user.setDisplayName(request.getDisplayName());
+        user.setEmail(normalizedEmail);
+        user.setDisplayName(normalizeDisplayName(request.getDisplayName()));
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        AppUser saved = appUserRepository.save(user);
+        AppUser saved;
+        try {
+            saved = appUserRepository.saveAndFlush(user);
+        } catch (DataIntegrityViolationException ex) {
+            logger.warn("auth.register.duplicate-race email={}", normalizedEmail);
+            throw new BadRequestException("Email already registered");
+        }
         logger.info("auth.register.success userId={}", saved.getId());
 
         return issueTokens(saved);
     }
 
     public AuthResponse login(LoginRequest request) {
-        logger.info("auth.login.request email={}", request.getEmail());
-        AppUser user = appUserRepository.findByEmail(request.getEmail().toLowerCase())
+        String normalizedEmail = normalizeEmail(request.getEmail());
+        logger.info("auth.login.request email={}", normalizedEmail);
+        AppUser user = appUserRepository.findByEmail(normalizedEmail)
                 .orElseThrow(() -> new BadRequestException("Invalid credentials"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
@@ -81,11 +93,12 @@ public class AuthService {
         return issueTokens(user);
     }
 
+    @Transactional
     public AuthResponse refresh(RefreshRequest request) {
         logger.info("auth.refresh.request");
         String rawToken = request.getRefreshToken();
         String tokenHash = hashToken(rawToken);
-        RefreshToken stored = refreshTokenRepository.findByTokenHash(tokenHash)
+        RefreshToken stored = refreshTokenRepository.findByTokenHashForUpdate(tokenHash)
                 .orElseThrow(() -> new BadRequestException("Invalid refresh token"));
 
         if (stored.isRevoked() || stored.isExpired(Instant.now())) {
@@ -101,6 +114,7 @@ public class AuthService {
         return issueTokens(stored.getUser());
     }
 
+    @Transactional
     public void logout(LogoutRequest request) {
         logger.info("auth.logout.request");
         String tokenHash = hashToken(request.getRefreshToken());
@@ -111,6 +125,19 @@ public class AuthService {
                 logger.info("auth.logout.success userId={}", token.getUser().getId());
             }
         });
+    }
+
+    private String normalizeEmail(String email) {
+        return email.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private String normalizeDisplayName(String displayName) {
+        if (displayName == null) {
+            return null;
+        }
+
+        String trimmed = displayName.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private AuthResponse issueTokens(AppUser user) {

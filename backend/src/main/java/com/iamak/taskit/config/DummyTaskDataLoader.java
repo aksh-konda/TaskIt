@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import com.iamak.taskit.dto.Priority;
 import com.iamak.taskit.dto.Status;
+import com.iamak.taskit.dto.TaskType;
 import com.iamak.taskit.entity.AppUser;
 import com.iamak.taskit.entity.Task;
 import com.iamak.taskit.repository.AppUserRepository;
@@ -53,64 +54,37 @@ public class DummyTaskDataLoader implements CommandLineRunner {
                 });
 
         List<Task> tasks = List.of(
-                new Task(
-                        null,
-                        "Fix LLM plan endpoint",
-                        "Debug and ensure AI returns a usable ordered task plan.",
-                        Status.IN_PROGRESS,
-                        Priority.HIGH,
-                        now.plus(1, ChronoUnit.DAYS),
-                        1800,
-                        40,
-                        user
-                ),
-                new Task(
-                        null,
-                        "Apply to 3 backend jobs",
-                        "Search and apply to at least 3 relevant backend developer roles.",
-                        Status.TODO,
-                        Priority.HIGH,
-                        now.plus(1, ChronoUnit.DAYS),
-                        1800,
-                        0,
-                        user
-                ),
-                new Task(
-                        null,
-                        "Gym workout (push day)",
-                        "Complete chest, shoulders, and triceps workout.",
-                        Status.TODO,
-                        Priority.MEDIUM,
-                        now.plus(0, ChronoUnit.DAYS),
-                        3600,
-                        0,
-                        user
-                ),
-                new Task(
-                        null,
-                        "Update resume project section",
-                        "Add AI task planner project with description and tech stack.",
-                        Status.TODO,
-                        Priority.HIGH,
-                        now.plus(2, ChronoUnit.DAYS),
-                        2400,
-                        0,
-                        user
-                ),
-                new Task(
-                        null,
-                        "Reduce screen time in morning",
-                        "Avoid phone usage for first 30 minutes after waking up.",
-                        Status.TODO,
-                        Priority.MEDIUM,
-                        now.plus(0, ChronoUnit.DAYS),
-                        900,
-                        0,
-                        user
-                )
+                task(user, "Fix LLM plan endpoint", "Debug and ensure AI returns a usable ordered task plan.", Status.IN_PROGRESS, Priority.HIGH, TaskType.DEEP_WORK, now.plus(1, ChronoUnit.DAYS), 30, 40),
+                task(user, "Apply to 3 backend jobs", "Search and apply to at least 3 relevant backend developer roles.", Status.TODO, Priority.HIGH, TaskType.SHALLOW, now.plus(1, ChronoUnit.DAYS), 30, 0),
+                task(user, "Gym workout (push day)", "Complete chest, shoulders, and triceps workout.", Status.TODO, Priority.MEDIUM, TaskType.BREAK, now.plus(0, ChronoUnit.DAYS), 60, 0),
+                task(user, "Update resume project section", "Add AI task planner project with description and tech stack.", Status.TODO, Priority.HIGH, TaskType.DEEP_WORK, now.plus(2, ChronoUnit.DAYS), 40, 0),
+                task(user, "Reduce screen time in morning", "Avoid phone usage for first 30 minutes after waking up.", Status.TODO, Priority.MEDIUM, TaskType.HABIT, now.plus(0, ChronoUnit.DAYS), 15, 0)
         );
 
         taskRepository.saveAll(tasks);
         logger.info("Seeded {} dummy tasks for the dev profile", tasks.size());
+    }
+
+    private Task task(
+            AppUser user,
+            String title,
+            String description,
+            Status status,
+            Priority priority,
+            TaskType type,
+            Instant dueDate,
+            Integer estimatedMinutes,
+            int progress) {
+        Task task = new Task();
+        task.setOwner(user);
+        task.setTitle(title);
+        task.setDescription(description);
+        task.setStatus(status);
+        task.setPriority(priority);
+        task.setType(type);
+        task.setDueDate(dueDate);
+        task.setEstTime(estimatedMinutes);
+        task.setProgress(progress);
+        return task;
     }
 }

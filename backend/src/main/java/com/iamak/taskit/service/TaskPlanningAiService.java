@@ -36,12 +36,14 @@ public class TaskPlanningAiService {
             """;
 
     private final ChatClient chatClient;
+    private final RAGService ragService;
 
-    public TaskPlanningAiService(ChatClient.Builder chatClientBuilder) {
+    public TaskPlanningAiService(ChatClient.Builder chatClientBuilder, RAGService ragService) {
         this.chatClient = chatClientBuilder.build();
+        this.ragService = ragService;
     }
 
-    public List<String> generatePlan(String callId, LocalDateTime dateTime, List<Task> tasks) {
+    public List<String> generatePlan(String callId, Long userId, LocalDateTime dateTime, List<Task> tasks) {
         long startNanos = System.nanoTime();
         LocalDateTime effectiveDateTime = dateTime != null ? dateTime : LocalDateTime.now();
         List<Task> safeTasks = tasks == null ? List.of()
@@ -58,7 +60,13 @@ public class TaskPlanningAiService {
                 effectiveDateTime);
 
         try {
-            String prompt = buildPrompt(effectiveDateTime, safeTasks);
+            List<String> retrievedMemories = userId != null
+                    ? ragService.retrieveRelevantMemories(userId, "daily plan productivity focus", 6).stream()
+                            .map(memory -> memory.getContent())
+                            .toList()
+                    : List.of();
+
+            String prompt = buildPrompt(effectiveDateTime, safeTasks, retrievedMemories);
             if (logger.isDebugEnabled()) {
                 logger.debug(BLOCK_SEPARATOR);
                 logger.debug("[AI_PLAN][{}][PROMPT_BEGIN]", safeCallId);
@@ -98,7 +106,7 @@ public class TaskPlanningAiService {
         }
     }
 
-    private String buildPrompt(LocalDateTime dateTime, List<Task> tasks) {
+    private String buildPrompt(LocalDateTime dateTime, List<Task> tasks, List<String> memories) {
         StringBuilder builder = new StringBuilder();
         builder.append("Planning context time: ")
                 .append(dateTime)
@@ -112,7 +120,16 @@ public class TaskPlanningAiService {
                     .append(task.getPriority())
                     .append(" | status: ")
                     .append(task.getStatus())
+                    .append(" | type: ")
+                    .append(task.getType())
                     .append("\n");
+        }
+
+        if (!memories.isEmpty()) {
+            builder.append("\nRelevant past patterns:\n");
+            for (String memory : memories) {
+                builder.append("- ").append(memory).append("\n");
+            }
         }
 
         builder.append("""
