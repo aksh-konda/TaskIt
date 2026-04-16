@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16
     environment:
       POSTGRES_DB: taskit
       POSTGRES_USER: taskit
@@ -32,11 +32,20 @@ services:
       SPRING_AI_GOOGLE_GENAI_API_KEY: ${SPRING_AI_GOOGLE_GENAI_API_KEY}
       SPRING_AI_GOOGLE_GENAI_CHAT_MODEL: ${SPRING_AI_GOOGLE_GENAI_CHAT_MODEL:-gemini-3-flash-preview}
       SPRING_AI_GOOGLE_GENAI_CHAT_TEMPERATURE: ${SPRING_AI_GOOGLE_GENAI_CHAT_TEMPERATURE:-0.2}
+      SPRING_AI_GOOGLE_GENAI_EMBEDDING_MODEL: ${SPRING_AI_GOOGLE_GENAI_EMBEDDING_MODEL:-text-embedding-004}
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/taskit
     ports:
       - "8080:8080"
     depends_on:
       postgres:
         condition: service_healthy
+      mongodb:
+        condition: service_started
+
+  mongodb:
+    image: mongo:7
+    ports:
+      - "27017:27017"
 
   frontend:
     image: node:20-alpine

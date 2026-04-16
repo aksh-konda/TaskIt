@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.iamak.taskit.dto.task.TaskRequest;
 import com.iamak.taskit.dto.task.TaskResponse;
+import com.iamak.taskit.dto.Priority;
+import com.iamak.taskit.dto.Status;
 import com.iamak.taskit.entity.Task;
 import com.iamak.taskit.security.UserPrincipal;
 import com.iamak.taskit.service.TaskService;
@@ -68,8 +70,8 @@ public class TaskController {
         Task task = new Task();
         task.setTitle(request.getTitle().trim());
         task.setDescription(request.getDescription() != null ? request.getDescription().trim() : null);
-        task.setStatus(request.getStatus());
-        task.setPriority(request.getPriority());
+        task.setStatus(request.getStatus() != null ? request.getStatus() : Status.TODO);
+        task.setPriority(request.getPriority() != null ? request.getPriority() : Priority.MEDIUM);
         task.setType(request.getType());
         task.setDueDate(request.getDueDate());
         task.setScheduledAt(request.getScheduledAt());

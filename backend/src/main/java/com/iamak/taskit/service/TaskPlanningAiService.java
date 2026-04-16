@@ -37,10 +37,12 @@ public class TaskPlanningAiService {
 
     private final ChatClient chatClient;
     private final RAGService ragService;
+    private final AiLogService aiLogService;
 
-    public TaskPlanningAiService(ChatClient.Builder chatClientBuilder, RAGService ragService) {
+    public TaskPlanningAiService(ChatClient.Builder chatClientBuilder, RAGService ragService, AiLogService aiLogService) {
         this.chatClient = chatClientBuilder.build();
         this.ragService = ragService;
+        this.aiLogService = aiLogService;
     }
 
     public List<String> generatePlan(String callId, Long userId, LocalDateTime dateTime, List<Task> tasks) {
@@ -90,6 +92,7 @@ public class TaskPlanningAiService {
             }
 
             List<String> parsedPlan = parsePlanLines(safeCallId, content, effectiveDateTime, safeTasks);
+            aiLogService.logPlannerCall(userId, prompt, retrievedMemories, String.join("\n", parsedPlan));
             long totalDurationMs = (System.nanoTime() - startNanos) / 1_000_000;
 
             logger.info("[AI_PLAN][{}] ai.generate.success aiDurationMs={} totalDurationMs={} responseChars={} planSteps={}",
@@ -102,7 +105,9 @@ public class TaskPlanningAiService {
             return parsedPlan;
         } catch (Exception ex) {
             logger.error("[AI_PLAN][{}] ai.generate.error fallback=deterministic", safeCallId, ex);
-            return fallbackPlan(safeCallId, effectiveDateTime, safeTasks);
+            List<String> fallback = fallbackPlan(safeCallId, effectiveDateTime, safeTasks);
+            aiLogService.logPlannerCall(userId, "fallback-plan", List.of(), String.join("\n", fallback));
+            return fallback;
         }
     }
 

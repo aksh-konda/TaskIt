@@ -45,6 +45,34 @@ public class DailyLogService {
         return dailyLogRepository.findAllByUserIdOrderByLogDateDesc(userId);
     }
 
+    public DailyLog update(Long id, DailyLog update, Long userId) {
+        DailyLog existing = dailyLogRepository.findByIdAndUserId(id, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Daily log not found"));
+
+        existing.setLogDate(update.getLogDate());
+        existing.setMood(update.getMood());
+        existing.setEnergy(update.getEnergy());
+        existing.setSleepHours(update.getSleepHours());
+        existing.setNotes(update.getNotes());
+        existing.setWins(update.getWins());
+        existing.setBlockers(update.getBlockers());
+
+        DailyLog saved = dailyLogRepository.save(existing);
+        ragService.storeMemory(
+                userId,
+                buildSummary(saved),
+                MemoryType.LOG,
+                "daily_log",
+                String.valueOf(saved.getId()));
+        return saved;
+    }
+
+    public void delete(Long id, Long userId) {
+        DailyLog existing = dailyLogRepository.findByIdAndUserId(id, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Daily log not found"));
+        dailyLogRepository.delete(existing);
+    }
+
     private String buildSummary(DailyLog log) {
         StringBuilder summary = new StringBuilder("Daily reflection");
         if (log.getMood() != null) {

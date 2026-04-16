@@ -2,6 +2,7 @@ package com.iamak.taskit.entity;
 
 import java.time.LocalDate;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -31,4 +32,7 @@ public class HabitLog {
 
     private LocalDate date;
     private boolean completed;
+
+    @Column(length = 500)
+    private String skipReason;
 }

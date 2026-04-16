@@ -2,11 +2,31 @@ package com.iamak.taskit.dto.habit;
 
 import java.time.LocalDate;
 
-public class HabitLogRequest {
+import com.iamak.taskit.entity.HabitLog;
 
+public class HabitLogResponse {
+
+    private Long id;
     private LocalDate date;
     private boolean completed;
     private String skipReason;
+
+    public static HabitLogResponse from(HabitLog log) {
+        HabitLogResponse response = new HabitLogResponse();
+        response.setId(log.getId());
+        response.setDate(log.getDate());
+        response.setCompleted(log.isCompleted());
+        response.setSkipReason(log.getSkipReason());
+        return response;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public LocalDate getDate() {
         return date;

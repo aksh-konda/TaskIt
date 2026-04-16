@@ -51,7 +51,32 @@ public class HabitService {
         return habitRepository.findAllByUserIdOrderByCreatedAtDesc(userId);
     }
 
-    public HabitLog logHabit(Long habitId, Long userId, LocalDate date, boolean completed) {
+    public Habit update(Long habitId, Habit update, Long userId) {
+        Habit existing = habitRepository.findByIdAndUserId(habitId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Habit not found"));
+
+        existing.setName(update.getName());
+        existing.setFrequency(update.getFrequency());
+        existing.setTarget(update.getTarget());
+        existing.setDifficulty(update.getDifficulty());
+
+        Habit saved = habitRepository.save(existing);
+        ragService.storeMemory(
+                userId,
+                "Updated habit " + saved.getName() + " with frequency " + defaultText(saved.getFrequency()),
+                MemoryType.INSIGHT,
+                "habit",
+                String.valueOf(saved.getId()));
+        return saved;
+    }
+
+    public void delete(Long habitId, Long userId) {
+        Habit existing = habitRepository.findByIdAndUserId(habitId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Habit not found"));
+        habitRepository.delete(existing);
+    }
+
+        public HabitLog logHabit(Long habitId, Long userId, LocalDate date, boolean completed, String skipReason) {
         Habit habit = habitRepository.findByIdAndUserId(habitId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Habit not found"));
 
@@ -59,15 +84,35 @@ public class HabitService {
         log.setHabit(habit);
         log.setDate(date != null ? date : LocalDate.now());
         log.setCompleted(completed);
+                log.setSkipReason(skipReason != null && !skipReason.isBlank() ? skipReason.trim() : null);
         HabitLog saved = habitLogRepository.save(log);
+
+                String memoryText = "Habit " + habit.getName() + " was " + (completed ? "completed" : "missed") + " on " + saved.getDate();
+                if (!completed && saved.getSkipReason() != null) {
+                        memoryText += ". Reason: " + saved.getSkipReason();
+                }
 
         ragService.storeMemory(
                 userId,
-                "Habit " + habit.getName() + " was " + (completed ? "completed" : "missed") + " on " + saved.getDate(),
+                                memoryText,
                 MemoryType.LOG,
                 "habit_log",
                 String.valueOf(saved.getId()));
         return saved;
+    }
+
+    public List<HabitLog> getLogs(Long habitId, Long userId) {
+        habitRepository.findByIdAndUserId(habitId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Habit not found"));
+        return habitLogRepository.findAllByHabitIdOrderByDateDesc(habitId);
+    }
+
+    public void deleteLog(Long habitId, Long logId, Long userId) {
+        habitRepository.findByIdAndUserId(habitId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Habit not found"));
+        HabitLog log = habitLogRepository.findByIdAndHabitId(logId, habitId)
+                .orElseThrow(() -> new ResourceNotFoundException("Habit log not found"));
+        habitLogRepository.delete(log);
     }
 
     private String defaultText(String value) {

@@ -1,5 +1,62 @@
 
 @import "tailwindcss";
 
-/* No custom CSS here — use Tailwind utility classes in components */
+.reward-burst {
+	pointer-events: none;
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+}
+
+.hint-card {
+	animation: hint-enter 320ms ease-out;
+}
+
+.undo-toast {
+	animation: undo-enter 240ms ease-out;
+}
+
+.reward-particle {
+	position: absolute;
+	width: 8px;
+	height: 8px;
+	border-radius: 999px;
+	animation: reward-pop 800ms ease-out forwards;
+}
+
+@keyframes reward-pop {
+	0% {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+
+	100% {
+		opacity: 0;
+		transform: translateY(-52px) scale(0.6);
+	}
+}
+
+@keyframes hint-enter {
+	0% {
+		opacity: 0;
+		transform: translateY(-8px);
+	}
+
+	100% {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes undo-enter {
+	0% {
+		opacity: 0;
+		transform: translateY(10px);
+	}
+
+	100% {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
 

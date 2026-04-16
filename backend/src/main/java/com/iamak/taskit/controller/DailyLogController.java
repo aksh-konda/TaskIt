@@ -3,8 +3,11 @@ package com.iamak.taskit.controller;
 import java.util.List;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -47,5 +50,28 @@ public class DailyLogController {
         return dailyLogService.getAll(principal.getId()).stream()
                 .map(DailyLogResponse::from)
                 .toList();
+    }
+
+    @PutMapping("/{id}")
+    public DailyLogResponse update(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long id,
+            @Valid @RequestBody DailyLogRequest request) {
+        DailyLog log = new DailyLog();
+        log.setLogDate(request.getLogDate());
+        log.setMood(request.getMood());
+        log.setEnergy(request.getEnergy());
+        log.setSleepHours(request.getSleepHours());
+        log.setNotes(request.getNotes());
+        log.setWins(request.getWins());
+        log.setBlockers(request.getBlockers());
+        return DailyLogResponse.from(dailyLogService.update(id, log, principal.getId()));
+    }
+
+    @DeleteMapping("/{id}")
+    public void delete(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long id) {
+        dailyLogService.delete(id, principal.getId());
     }
 }

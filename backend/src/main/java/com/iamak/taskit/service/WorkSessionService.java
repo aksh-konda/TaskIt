@@ -57,6 +57,40 @@ public class WorkSessionService {
         return workSessionRepository.findAllByUserIdOrderByStartTimeDesc(userId);
     }
 
+    public WorkSession update(Long sessionId, WorkSession update, Long taskId, Long userId) {
+        WorkSession existing = workSessionRepository.findByIdAndUserId(sessionId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Session not found"));
+
+        existing.setStartTime(update.getStartTime());
+        existing.setEndTime(update.getEndTime());
+        existing.setFocusScore(update.getFocusScore());
+        existing.setDistractionCount(update.getDistractionCount());
+        existing.setNotes(update.getNotes());
+
+        if (taskId == null) {
+            existing.setTask(null);
+        } else {
+            Task task = taskRepository.findByIdAndOwnerId(taskId, userId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Task not found"));
+            existing.setTask(task);
+        }
+
+        WorkSession saved = workSessionRepository.save(existing);
+        ragService.storeMemory(
+                userId,
+                buildSummary(saved),
+                MemoryType.SESSION,
+                "work_session",
+                String.valueOf(saved.getId()));
+        return saved;
+    }
+
+    public void delete(Long sessionId, Long userId) {
+        WorkSession existing = workSessionRepository.findByIdAndUserId(sessionId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Session not found"));
+        workSessionRepository.delete(existing);
+    }
+
     private String buildSummary(WorkSession session) {
         StringBuilder summary = new StringBuilder("Worked session");
         if (session.getTask() != null) {
